@@ -1,1 +1,972 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Laporan Pekerjaan Harian</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sidebar-item-active {
+            background-color: #0f766e;
+            color: white;
+            border-left: 4px solid #ccfbf1;
+        }
+        /* Modal Styles */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: hidden !important;
+        }
+    </style>
+</head>
+<body class="bg-teal-50 text-slate-800 font-sans h-screen flex flex-col overflow-hidden">
 
+    <!-- ================= VIEW 1: LANDING PAGE ================= -->
+    <div id="view-landing" class="h-full flex flex-col items-center justify-center p-6 fade-in">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center border-t-4 border-teal-600">
+            <div class="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-teal-100 text-teal-700">
+                <i class="fas fa-hard-hat text-4xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-teal-900 mb-2">WorkReport Pro</h1>
+            <p class="text-slate-500 mb-8">Sistem Pelaporan Pekerjaan Harian Terintegrasi</p>
+            
+            <div class="space-y-4">
+                <button onclick="router('login-worker')" class="w-full group relative flex items-center justify-center py-4 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-teal-600 hover:bg-teal-700 focus:outline-none shadow-md transition-all">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-user-edit text-teal-200 group-hover:text-white"></i>
+                    </span>
+                    Masuk Sebagai Pekerja
+                </button>
+                
+                <button onclick="router('login-manager')" class="w-full group relative flex items-center justify-center py-4 px-4 border border-teal-200 text-sm font-medium rounded-xl text-teal-700 bg-white hover:bg-teal-50 focus:outline-none transition-all">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-user-tie text-teal-500"></i>
+                    </span>
+                    Masuk Sebagai Admin
+                </button>
+            </div>
+            <p class="mt-8 text-xs text-slate-400">© 2023 WorkReport System v1.4</p>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 2: MANAGER LOGIN ================= -->
+    <div id="view-login-manager" class="hidden h-full flex flex-col items-center justify-center p-6 fade-in bg-teal-900">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm fade-in relative">
+            <button onclick="router('landing')" class="absolute top-4 left-4 text-slate-400 hover:text-teal-600"><i class="fas fa-arrow-left"></i></button>
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-teal-900">Login Manager</h2>
+                <p class="text-sm text-slate-500">Akses Dashboard Pengawas</p>
+            </div>
+            <form onsubmit="handleManagerLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">USERNAME</label>
+                    <input type="text" id="manager-user" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="manager">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">PASSWORD</label>
+                    <input type="password" id="manager-pass" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="admin123">
+                </div>
+                <button type="submit" class="w-full bg-teal-800 hover:bg-teal-900 text-white font-bold py-3 rounded-lg transition shadow-lg">MASUK DASHBOARD</button>
+            </form>
+            <div class="mt-4 text-center text-xs text-slate-400">Default: manager / admin123</div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 2B: WORKER LOGIN ================= -->
+    <div id="view-login-worker" class="hidden h-full flex flex-col items-center justify-center p-6 fade-in bg-teal-600">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm fade-in relative">
+            <button onclick="router('landing')" class="absolute top-4 left-4 text-slate-400 hover:text-teal-600"><i class="fas fa-arrow-left"></i></button>
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 mb-2">
+                    <i class="fas fa-user-hard-hat text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-teal-900">Login Pekerja</h2>
+                <p class="text-sm text-slate-500">Silakan masuk untuk input laporan</p>
+            </div>
+            <form onsubmit="handleWorkerLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">USER ID</label>
+                    <input type="text" id="worker-user" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="pekerja">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">PASSWORD</label>
+                    <input type="password" id="worker-pass" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="12345">
+                </div>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg transition shadow-lg">MULAI KERJA</button>
+            </form>
+            <div class="mt-4 text-center text-xs text-slate-400">Default: pekerja / 12345</div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 3A: WORKER MENU ================= -->
+    <div id="view-worker-menu" class="hidden h-full flex flex-col items-center justify-center p-6 fade-in bg-slate-50">
+        <div class="w-full max-w-md">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Halo, Pekerja</h2>
+                    <p class="text-slate-500 text-sm">Pilih jenis laporan yang akan diinput</p>
+                </div>
+                <button onclick="logoutWorker()" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Option 1 -->
+                <button onclick="router('worker-daily')" class="bg-white p-6 rounded-xl shadow-md border border-slate-200 flex items-center gap-4 hover:shadow-lg hover:border-teal-500 transition group text-left">
+                    <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition">
+                        <i class="fas fa-clipboard-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg group-hover:text-teal-700">Input Laporan Harian</h3>
+                        <p class="text-xs text-slate-500">Input progres pekerjaan rutin, aset, & lingkungan.</p>
+                    </div>
+                    <i class="fas fa-chevron-right ml-auto text-slate-300 group-hover:text-teal-500"></i>
+                </button>
+
+                <!-- Option 2 (Modified to Viewer) -->
+                <button onclick="router('worker-data')" class="bg-white p-6 rounded-xl shadow-md border border-slate-200 flex items-center gap-4 hover:shadow-lg hover:border-blue-500 transition group text-left">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fas fa-table text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg group-hover:text-blue-700">Hasil Data Laporan</h3>
+                        <p class="text-xs text-slate-500">Lihat tabel, cari data, dan download CSV.</p>
+                    </div>
+                    <i class="fas fa-chevron-right ml-auto text-slate-300 group-hover:text-blue-500"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 3B: FORM HARIAN (INPUT) ================= -->
+    <div id="view-worker-daily" class="hidden flex-col h-full bg-slate-50 fade-in">
+        <header class="bg-teal-700 text-white shadow-md z-20 sticky top-0">
+            <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="router('worker-menu')" class="mr-2 text-teal-200 hover:text-white"><i class="fas fa-arrow-left"></i></button>
+                    <h1 class="font-bold text-lg">Input Laporan Harian</h1>
+                </div>
+                <div class="text-xs bg-teal-800 px-3 py-1 rounded-full text-teal-100">Utama</div>
+            </div>
+        </header>
+
+        <main class="flex-grow overflow-y-auto p-4">
+            <form id="form-daily" onsubmit="submitReport(event, 'harian')" class="max-w-4xl mx-auto space-y-6 pb-12">
+                <!-- Section 1: Info Umum -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100 flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-teal-600"></i>
+                        <h2 class="font-bold text-teal-900">Informasi Umum & Lokasi</h2>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Tanggal</label>
+                            <input type="date" name="tanggal" required class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">PIC (Penanggung Jawab)</label>
+                            <input type="text" name="pic" required placeholder="Nama PIC" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Section</label>
+                            <input type="text" name="section" placeholder="Contoh: Section 1A" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Kota / Kabupaten</label>
+                            <input type="text" name="kota" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Desa / Kelurahan</label>
+                            <input type="text" name="desa" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Area (PPK)</label>
+                            <input type="text" name="area" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-3 grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">KM Start</label>
+                                <input type="number" step="0.01" name="km_start" placeholder="00.00" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">KM Finish</label>
+                                <input type="number" step="0.01" name="km_finish" placeholder="00.00" class="w-full p-2 border rounded focus:border-teal-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Pengawas Aset -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100 flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-teal-600"></i>
+                        <h2 class="font-bold text-teal-900">Pengawas Aset</h2>
+                    </div>
+                    <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Lahan Bengkok (m²)</label>
+                            <input type="number" name="asset_lahan" value="0" class="w-full p-2 border rounded focus:border-teal-500 text-center font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Patok (Unit)</label>
+                            <input type="number" name="asset_patok" value="0" class="w-full p-2 border rounded focus:border-teal-500 text-center font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Tiang (Unit)</label>
+                            <input type="number" name="asset_tiang" value="0" class="w-full p-2 border rounded focus:border-teal-500 text-center font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Pagar (Meter)</label>
+                            <input type="number" name="asset_pagar" value="0" class="w-full p-2 border rounded focus:border-teal-500 text-center font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Kebersihan & Lingkungan -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-teal-50 px-4 py-3 border-b border-teal-100 flex items-center gap-2">
+                            <i class="fas fa-trash-alt text-teal-600"></i>
+                            <h2 class="font-bold text-teal-900 text-sm">Pembersihan Sampah</h2>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Organik (m³)</label>
+                                <input type="number" step="0.1" name="sampah_organik" value="0" class="w-full p-2 border rounded focus:border-teal-500 bg-green-50">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Non-Organik (m³)</label>
+                                <input type="number" step="0.1" name="sampah_anorganik" value="0" class="w-full p-2 border rounded focus:border-teal-500 bg-orange-50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-teal-50 px-4 py-3 border-b border-teal-100 flex items-center gap-2">
+                            <i class="fas fa-leaf text-teal-600"></i>
+                            <h2 class="font-bold text-teal-900 text-sm">Pemotongan Rumput</h2>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Manual (m²)</label>
+                                <input type="number" name="rumput_manual" value="0" class="w-full p-2 border rounded focus:border-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Mekanis (m²)</label>
+                                <input type="number" name="rumput_mekanis" value="0" class="w-full p-2 border rounded focus:border-teal-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Drainase & Pohon -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-teal-50 px-4 py-3 border-b border-teal-100 flex items-center gap-2">
+                            <i class="fas fa-water text-teal-600"></i>
+                            <h2 class="font-bold text-teal-900 text-sm">Pembersihan Drainase</h2>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                                <label class="text-sm text-slate-600">Galian (m³)</label>
+                                <input type="number" step="0.1" name="drainase_galian" value="0" class="w-24 p-1 border rounded text-right">
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                                <label class="text-sm text-slate-600">Gotong Royong (m²)</label>
+                                <input type="number" name="drainase_gotong" value="0" class="w-24 p-1 border rounded text-right">
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm text-slate-600">Penyerapan (m³)</label>
+                                <input type="number" step="0.1" name="drainase_serap" value="0" class="w-24 p-1 border rounded text-right">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-teal-50 px-4 py-3 border-b border-teal-100 flex items-center gap-2">
+                            <i class="fas fa-tree text-teal-600"></i>
+                            <h2 class="font-bold text-teal-900 text-sm">Pemangkasan Pohon (Batang)</h2>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs text-slate-500">Kecil</label>
+                                <input type="number" name="pohon_kecil" value="0" class="w-full p-1 border rounded">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500">Sedang</label>
+                                <input type="number" name="pohon_sedang" value="0" class="w-full p-1 border rounded">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500">Besar</label>
+                                <input type="number" name="pohon_besar" value="0" class="w-full p-1 border rounded">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500">X-Large</label>
+                                <input type="number" name="pohon_xl" value="0" class="w-full p-1 border rounded">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Dokumentasi -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100 flex items-center gap-2">
+                        <i class="fas fa-camera text-teal-600"></i>
+                        <h2 class="font-bold text-teal-900">Dokumentasi & Catatan</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2">Keterangan Tambahan</label>
+                            <textarea name="keterangan" rows="3" class="w-full p-3 border rounded-lg focus:border-teal-500 focus:outline-none bg-slate-50" placeholder="Tuliskan detail kondisi lapangan..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition relative">
+                                <label class="cursor-pointer block">
+                                    <div class="text-teal-600 mb-2"><i class="fas fa-image text-3xl"></i></div>
+                                    <span class="text-sm font-medium text-slate-600">Foto Sebelum (0%)</span>
+                                    <input type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'preview-before')">
+                                </label>
+                                <img id="preview-before" class="hidden mt-2 max-h-40 mx-auto rounded shadow-sm">
+                            </div>
+                            <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition relative">
+                                <label class="cursor-pointer block">
+                                    <div class="text-teal-600 mb-2"><i class="fas fa-check-circle text-3xl"></i></div>
+                                    <span class="text-sm font-medium text-slate-600">Foto Sesudah (100%)</span>
+                                    <input type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'preview-after')">
+                                </label>
+                                <img id="preview-after" class="hidden mt-2 max-h-40 mx-auto rounded shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Kirim Laporan
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- ================= VIEW 3C: HASIL DATA LAPORAN (VIEWER) ================= -->
+    <div id="view-worker-data" class="hidden flex-col h-full bg-slate-50 fade-in">
+        <header class="bg-blue-700 text-white shadow-md z-20 sticky top-0">
+            <div class="max-w-7xl mx-auto w-full px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="router('worker-menu')" class="mr-2 text-blue-200 hover:text-white"><i class="fas fa-arrow-left"></i></button>
+                    <h1 class="font-bold text-lg">Hasil Data Input Laporan Harian</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportWorkerData()" class="bg-white text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2 transition">
+                        <i class="fas fa-download"></i> <span class="hidden sm:inline">CSV</span>
+                    </button>
+                    <div class="text-xs bg-blue-800 px-3 py-1.5 rounded-full text-blue-100">Database View</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow overflow-y-auto p-4">
+            <div class="max-w-7xl mx-auto space-y-4">
+                
+                <!-- 1. KOLEKSI PENCARIAN -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 justify-between items-center sticky top-0 z-10">
+                    <div class="relative w-full sm:w-96">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="search-input" onkeyup="renderWorkerData()" placeholder="Cari: PIC, Kota, Section..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        Total Data: <span id="worker-data-count" class="font-bold text-blue-600">0</span>
+                    </div>
+                </div>
+
+                <!-- 2. KOLEKSI TABEL HASIL DATA -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 whitespace-nowrap">
+                                <tr>
+                                    <th class="px-4 py-3 border-b">No</th>
+                                    <th class="px-4 py-3 border-b">Tanggal</th>
+                                    <th class="px-4 py-3 border-b">Section</th>
+                                    <th class="px-4 py-3 border-b">Kota</th>
+                                    <th class="px-4 py-3 border-b">Desa</th>
+                                    <th class="px-4 py-3 border-b">Lokasi (Area)</th>
+                                    <th class="px-4 py-3 border-b">PIC</th>
+                                    <th class="px-4 py-3 border-b text-center">Area m³ (Total)</th>
+                                    <th class="px-4 py-3 border-b text-center">KM Start</th>
+                                    <th class="px-4 py-3 border-b text-center">KM Finish</th>
+                                    <th class="px-4 py-3 border-b text-center">Hasil Foto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="worker-table-body" class="divide-y divide-slate-100">
+                                <!-- Data populated by JS -->
+                            </tbody>
+                        </table>
+                        
+                        <div id="worker-empty-msg" class="hidden p-12 text-center text-slate-400">
+                            <i class="fas fa-database text-4xl mb-3 text-slate-200"></i>
+                            <p>Data tidak ditemukan dalam database.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= VIEW 4: ADMIN DASHBOARD ================= -->
+    <div id="view-dashboard" class="hidden h-full flex fade-in bg-slate-100">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-teal-900 text-white flex flex-col shadow-2xl z-30 hidden md:flex">
+            <div class="p-6 flex items-center gap-3 border-b border-teal-800">
+                <div class="bg-teal-100 rounded p-1"><i class="fas fa-hard-hat text-teal-800 text-lg"></i></div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Admin<span class="text-teal-300">Panel</span></h1>
+                    <p class="text-xs text-teal-400">Manager Access</p>
+                </div>
+            </div>
+            <nav class="flex-grow py-6 space-y-1">
+                <a href="#" class="sidebar-item-active flex items-center px-6 py-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-th-large w-6"></i> Dashboard
+                </a>
+                <a href="#" class="text-teal-100 hover:bg-teal-800 hover:text-white flex items-center px-6 py-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-table w-6"></i> Data Laporan
+                </a>
+                <button onclick="logoutManager()" class="w-full text-left text-teal-100 hover:bg-teal-800 hover:text-white flex items-center px-6 py-3 text-sm font-medium transition-colors">
+                     <i class="fas fa-sign-out-alt w-6"></i> Logout
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-grow flex flex-col h-full overflow-hidden">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center md:hidden">
+                <h1 class="font-bold text-teal-900">Admin Dashboard</h1>
+                <button onclick="logoutManager()" class="text-slate-500"><i class="fas fa-sign-out-alt"></i></button>
+            </header>
+
+            <main class="flex-grow overflow-y-auto p-4 md:p-8">
+                <!-- Welcome -->
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Ringkasan Pekerjaan</h2>
+                        <p class="text-slate-500 text-sm">Overview performa tim hari ini</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <span class="bg-white px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-slate-600 border">
+                            <i class="far fa-calendar-alt mr-2 text-teal-600"></i> <span id="current-date"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Total Laporan</p>
+                            <p class="text-2xl font-bold text-teal-600" id="stat-total">0</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Sampah (m³)</p>
+                            <p class="text-2xl font-bold text-orange-500" id="stat-sampah">0</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Rumput (m²)</p>
+                            <p class="text-2xl font-bold text-green-600" id="stat-rumput">0</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Aset Lahan</p>
+                            <p class="text-2xl font-bold text-blue-600" id="stat-lahan">0</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Reports Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h3 class="font-bold text-slate-800">Data Laporan Masuk</h3>
+                        <button onclick="exportData()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded transition">
+                            <i class="fas fa-download mr-1"></i> Export CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
+                                <tr>
+                                    <th class="px-6 py-3">Tanggal</th>
+                                    <th class="px-6 py-3">Tipe/PIC</th>
+                                    <th class="px-6 py-3">Lokasi/Item</th>
+                                    <th class="px-6 py-3 text-center">Detail 1</th>
+                                    <th class="px-6 py-3 text-center">Detail 2</th>
+                                    <th class="px-6 py-3 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body" class="divide-y divide-slate-100">
+                                <!-- Data will be injected here -->
+                            </tbody>
+                        </table>
+                        <div id="empty-table-msg" class="hidden p-8 text-center text-slate-400">
+                            Belum ada data laporan masuk.
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Image Preview -->
+    <div id="img-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-75" onclick="closeImgModal()">
+        <img id="img-modal-src" class="max-w-full max-h-full rounded shadow-lg p-2" src="">
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // --- 1. CONFIG & STATE ---
+        const DB_KEY = 'work_report_db';
+        let currentReports = [];
+        let tempImages = { before: null, after: null };
+        
+        // --- 2. INIT ---
+        window.onload = function() {
+            loadData();
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Set default date
+            const today = new Date().toISOString().split('T')[0];
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => input.value = today);
+        }
+
+        // --- 3. NAVIGATION ROUTER ---
+        function router(viewName) {
+            // List of all views to hide
+            const views = [
+                'view-landing', 
+                'view-login-manager', 
+                'view-login-worker', 
+                'view-worker-menu', 
+                'view-worker-daily', 
+                'view-worker-data',
+                'view-dashboard'
+            ];
+            
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+
+            // Show selected view
+            const selected = document.getElementById(`view-${viewName}`);
+            if(selected) {
+                selected.classList.remove('hidden');
+                selected.classList.add('flex');
+            }
+
+            if(viewName === 'dashboard') {
+                renderAdminDashboard();
+            }
+            if(viewName === 'worker-data') {
+                renderWorkerData();
+            }
+        }
+
+        // --- 4. AUTHENTICATION ---
+        function handleManagerLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('manager-user').value;
+            const p = document.getElementById('manager-pass').value;
+
+            if(u === 'manager' && p === 'admin123') {
+                router('dashboard');
+            } else {
+                alert('Login Gagal! (Coba: manager / admin123)');
+            }
+        }
+
+        function handleWorkerLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('worker-user').value;
+            const p = document.getElementById('worker-pass').value;
+
+            if(u === 'pekerja' && p === '12345') {
+                // Redirect to Worker MENU instead of form directly
+                router('worker-menu');
+            } else {
+                alert('Login Gagal! (Coba: pekerja / 12345)');
+            }
+        }
+
+        function logoutManager() {
+            if(confirm('Keluar dari sistem?')) {
+                router('landing');
+                document.getElementById('manager-user').value = '';
+                document.getElementById('manager-pass').value = '';
+            }
+        }
+
+        function logoutWorker() {
+            if(confirm('Keluar dari sesi pekerja?')) {
+                router('landing');
+                document.getElementById('worker-user').value = '';
+                document.getElementById('worker-pass').value = '';
+            }
+        }
+
+        // --- 5. IMAGE PREVIEW ---
+        function previewImage(input, imgId) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(imgId);
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    if(imgId === 'preview-before') tempImages.before = e.target.result;
+                    if(imgId === 'preview-after') tempImages.after = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showImg(src) {
+            if(!src) return;
+            const modal = document.getElementById('img-modal');
+            const img = document.getElementById('img-modal-src');
+            img.src = src;
+            modal.classList.remove('hidden');
+        }
+
+        function closeImgModal() {
+            document.getElementById('img-modal').classList.add('hidden');
+        }
+
+        // --- 6. DATA HANDLING (WORKER SIDE) ---
+        function submitReport(e, type) {
+            e.preventDefault();
+            const form = e.target;
+            const fd = new FormData(form);
+            
+            let newReport = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                type: type // 'harian' or 'data_tambahan'
+            };
+
+            if (type === 'harian') {
+                newReport.general = {
+                    tanggal: fd.get('tanggal'),
+                    pic: fd.get('pic'),
+                    section: fd.get('section'),
+                    kota: fd.get('kota'),
+                    desa: fd.get('desa'),
+                    area: fd.get('area'),
+                    km_start: fd.get('km_start'),
+                    km_finish: fd.get('km_finish')
+                };
+                newReport.assets = {
+                    lahan: Number(fd.get('asset_lahan')),
+                    patok: Number(fd.get('asset_patok')),
+                    tiang: Number(fd.get('asset_tiang')),
+                    pagar: Number(fd.get('asset_pagar'))
+                };
+                newReport.waste = {
+                    organic: Number(fd.get('sampah_organik')),
+                    anorganik: Number(fd.get('sampah_anorganik'))
+                };
+                newReport.drainage = {
+                    galian: Number(fd.get('drainase_galian')),
+                    gotong: Number(fd.get('drainase_gotong')),
+                    serap: Number(fd.get('drainase_serap'))
+                };
+                newReport.grass = {
+                    manual: Number(fd.get('rumput_manual')),
+                    mekanis: Number(fd.get('rumput_mekanis'))
+                };
+                newReport.trees = {
+                    kecil: Number(fd.get('pohon_kecil')),
+                    sedang: Number(fd.get('pohon_sedang')),
+                    besar: Number(fd.get('pohon_besar')),
+                    xl: Number(fd.get('pohon_xl'))
+                };
+                newReport.extras = {
+                    notes: fd.get('keterangan'),
+                    img_before: tempImages.before,
+                    img_after: tempImages.after
+                };
+            } 
+
+            // Save to LocalStorage
+            currentReports.unshift(newReport);
+            saveData();
+
+            alert('Data Berhasil Disimpan!');
+            form.reset();
+            
+            if(type === 'harian') {
+                document.getElementById('preview-before').classList.add('hidden');
+                document.getElementById('preview-after').classList.add('hidden');
+                tempImages = { before: null, after: null };
+            }
+            
+            router('worker-menu'); // Go back to menu
+        }
+
+        // --- 7. WORKER DATA VIEWER (NEW) ---
+        function renderWorkerData() {
+            const tbody = document.getElementById('worker-table-body');
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const countLabel = document.getElementById('worker-data-count');
+            const emptyMsg = document.getElementById('worker-empty-msg');
+            
+            tbody.innerHTML = '';
+            
+            // Filter only Daily Reports and apply Search
+            const filtered = currentReports.filter(r => {
+                if(r.type !== 'harian') return false;
+                const str = (r.general.pic + ' ' + r.general.kota + ' ' + r.general.section).toLowerCase();
+                return str.includes(searchVal);
+            });
+
+            countLabel.innerText = filtered.length;
+
+            if(filtered.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                
+                filtered.forEach((r, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition border-b border-slate-100 whitespace-nowrap";
+                    
+                    // Calc Total Volume (m3) as requested
+                    const totalVol = (r.waste.organic + r.waste.anorganik + r.drainage.galian + r.drainage.serap).toFixed(1);
+
+                    // Images Buttons
+                    let imgHtml = '-';
+                    if(r.extras.img_before || r.extras.img_after) {
+                        imgHtml = `
+                            <div class="flex justify-center gap-1">
+                                ${r.extras.img_before ? `<button onclick="showImg('${r.extras.img_before}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Before</button>` : ''}
+                                ${r.extras.img_after ? `<button onclick="showImg('${r.extras.img_after}')" class="text-xs bg-teal-100 hover:bg-teal-200 text-teal-700 px-2 py-1 rounded">After</button>` : ''}
+                            </div>
+                        `;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 text-slate-500">${index + 1}</td>
+                        <td class="px-4 py-3 font-medium text-slate-700">${r.general.tanggal}</td>
+                        <td class="px-4 py-3">${r.general.section}</td>
+                        <td class="px-4 py-3">${r.general.kota}</td>
+                        <td class="px-4 py-3">${r.general.desa}</td>
+                        <td class="px-4 py-3">${r.general.area}</td>
+                        <td class="px-4 py-3">${r.general.pic}</td>
+                        <td class="px-4 py-3 text-center bg-blue-50 text-blue-700 font-bold">${totalVol}</td>
+                        <td class="px-4 py-3 text-center">${r.general.km_start}</td>
+                        <td class="px-4 py-3 text-center">${r.general.km_finish}</td>
+                        <td class="px-4 py-3 text-center">${imgHtml}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function exportWorkerData() {
+            // Filter Data Harian Only
+            const dataToExport = currentReports.filter(r => r.type === 'harian');
+            
+            if(dataToExport.length === 0) return alert('Tidak ada data laporan harian untuk diunduh.');
+
+            // CSV Header matches the requested columns
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "No,Tanggal,Section,Kota,Desa,Lokasi,PIC,Area_m3,KM_Start,KM_Finish,Catatan\n";
+
+            dataToExport.forEach((r, index) => {
+                const totalVol = (r.waste.organic + r.waste.anorganik + r.drainage.galian + r.drainage.serap).toFixed(2);
+                const row = [
+                    index + 1,
+                    r.general.tanggal,
+                    r.general.section,
+                    r.general.kota,
+                    r.general.desa,
+                    r.general.area, // Lokasi mapped to Area(PPK)
+                    r.general.pic,
+                    totalVol,
+                    r.general.km_start,
+                    r.general.km_finish,
+                    '"' + (r.extras.notes || '').replace(/"/g, '""') + '"' // Escape quotes
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data_input_laporan_harian.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // --- 8. ADMIN & CORE DATA ---
+        function loadData() {
+            const data = localStorage.getItem(DB_KEY);
+            if(data) {
+                currentReports = JSON.parse(data);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(DB_KEY, JSON.stringify(currentReports));
+            } catch (e) {
+                alert('Storage Penuh! Gambar terlalu besar.');
+            }
+        }
+
+        function renderAdminDashboard() {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+
+            let totalSampah = 0;
+            let totalRumput = 0;
+            let totalLahan = 0;
+            let reportCount = 0;
+
+            if(currentReports.length === 0) {
+                document.getElementById('empty-table-msg').classList.remove('hidden');
+            } else {
+                document.getElementById('empty-table-msg').classList.add('hidden');
+                
+                currentReports.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition border-b border-slate-50";
+
+                    if (r.type === 'harian') {
+                        reportCount++;
+                        totalSampah += (r.waste.organic + r.waste.anorganik);
+                        totalRumput += (r.grass.manual + r.grass.mekanis);
+                        totalLahan += r.assets.lahan;
+
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-medium text-slate-800">${r.general.tanggal}</td>
+                            <td class="px-6 py-4">
+                                <span class="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded font-bold">HARIAN</span>
+                                <div class="font-bold text-slate-700 mt-1">${r.general.pic}</div>
+                            </td>
+                            <td class="px-6 py-4 text-xs">
+                                <div>${r.general.kota}</div>
+                                <div class="text-slate-400">${r.general.desa}</div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Aset: ${r.assets.patok + r.assets.tiang}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">Sampah: ${(r.waste.organic + r.waste.anorganik).toFixed(1)} m³</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="viewDetail(${r.id})" class="text-teal-600 hover:text-teal-800 font-medium text-xs border border-teal-200 px-3 py-1 rounded hover:bg-white">Detail</button>
+                            </td>
+                        `;
+                    }
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('stat-total').innerText = reportCount;
+            document.getElementById('stat-sampah').innerText = totalSampah.toFixed(1);
+            document.getElementById('stat-rumput').innerText = totalRumput.toFixed(0);
+            document.getElementById('stat-lahan').innerText = totalLahan;
+        }
+
+        function viewDetail(id) {
+            const r = currentReports.find(item => item.id === id);
+            if(!r) return;
+            
+            let msg = '';
+            if (r.type === 'harian') {
+                msg = `LAPORAN HARIAN\nTanggal: ${r.general.tanggal}\nPIC: ${r.general.pic}\nLokasi: ${r.general.kota}\n\nSampah: ${(r.waste.organic+r.waste.anorganik)} m³\nRumput: ${(r.grass.manual+r.grass.mekanis)} m²\n\nCatatan: ${r.extras.notes}`;
+            }
+            alert(msg);
+        }
+
+        function exportData() {
+            // Legacy export function for Admin (Can be updated to match worker logic if needed)
+            if(currentReports.length === 0) return alert('Tidak ada data.');
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tipe,Tanggal,PIC,Lokasi,Nilai_Utama,Keterangan\n";
+            
+            currentReports.forEach(r => {
+                let row = [];
+                if(r.type === 'harian') {
+                    row = ['Harian', r.general.tanggal, r.general.pic, r.general.kota, (r.waste.organic + r.waste.anorganik) + ' m3', (r.extras.notes || '').replace(/,/g, ' ')];
+                }
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data_laporan_kerja.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+</html>
